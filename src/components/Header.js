@@ -1,5 +1,5 @@
 import React, {useState, useEffect} from 'react';
-import { useDispatch } from 'react-redux';
+import { useDispatch, useSelector } from 'react-redux';
 import { toggleMenu } from '../utils/appSlice';
 import { Link } from 'react-router-dom';
 import { SEARCH_SUGGESTIONS_URL } from '../utils/CONSTANTS';
@@ -10,8 +10,17 @@ const Header = () => {
     const [suggestions, setSuggestions] = useState([])
     const [showSuggestion, setShowSuggestion] = useState(false)
 
+    const searchCache = useSelector((store) => store.search)
+    const dispatch = useDispatch()
+
     useEffect(() => {
-        const timer = setTimeout(() => getSearchSuggestions(), 200)
+        const timer = setTimeout(() => {
+            if(searchCache[searchQuery]) {
+                setSuggestions(searchCache[searchQuery])
+            } else {
+                getSearchSuggestions()
+            }
+        }, 200)
 
         return () => {
             clearTimeout(timer) 
@@ -23,8 +32,6 @@ const Header = () => {
         const json = await data.json()
         setSuggestions(json[1]) 
     }
-
-    const dispatch = useDispatch()
 
     const toggleMenuHandler = () => {
         dispatch(toggleMenu())
@@ -44,7 +51,7 @@ const Header = () => {
                     onChange = {(e) => setSearchQuery(e.target.value)} 
                     onFocus = {() => setShowSuggestion(true)}
                     onBlur = {() => setShowSuggestion(false)}/>
-                <button className='border border-black rounded-r-full p-2'>Search</button>
+                    <button className='border border-black rounded-r-full p-2'>Search</button>
                 </div>
                 {showSuggestion && <div className = 'fixed bg-white py-2 px-2 w-[20rem] shadow-lg rounded-lg border border-gray'>
                     <ul>
@@ -56,7 +63,7 @@ const Header = () => {
                     </ul>
                 </div>}
             </div>
-            <div className='mr-0 col-span-1'>
+            <div className='mr-0 col-span-1 cursor-pointer'>
                 <img className = 'h-8 mr-0' alt='user' src = 'https://cdn-icons-png.flaticon.com/512/3177/3177440.png' />
             </div>
         </div>
